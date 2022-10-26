@@ -14,26 +14,27 @@ from nilearn.image import load_img, mean_img, binarize_img, resample_img
 from time import time
 from memory_profiler import profile
 
+
 @profile
 def runtime_profile():
-    results = Path(__file__).parent / 'results'
-    data_dir = Path(__file__).parent / 'data'
-    dataset = fetch_adhd(1, data_dir=data_dir)
+    t0 = time()
+    print(t0)
+    dataset = fetch_adhd(1, )
     func = load_img(dataset.func[0])
 
     # fetch difumo
     atlas_difumo = fetch_atlas_difumo(dimension=256, resolution_mm=3,
-                                      data_dir=data_dir, resume=True)
+                                      resume=True)
 
     # fetch schaefer 800
     atlas_schaefer_800_1mm = fetch_atlas_schaefer_2018(n_rois=800,
                                                        yeo_networks=7,
                                                        resolution_mm=1,
-                                                       data_dir=data_dir)
+                                                       )
     atlas_schaefer_800_2mm = fetch_atlas_schaefer_2018(n_rois=800,
                                                        yeo_networks=7,
                                                        resolution_mm=2,
-                                                       data_dir=data_dir)
+                                                       )
     # Grey matter
     gm_3mm = load_mni152_gm_mask(resolution=3)
     gm_1mm = load_mni152_gm_mask(resolution=1)
@@ -70,82 +71,86 @@ def runtime_profile():
         }
     }
 
-    for option in niftimasker_options.values():
-        t1 = time()
-        preprocessor = NiftiMasker(mask_img=option['mask_img'],
-                                   memory_level=0, verbose=0)
-        data = preprocessor.fit_transform(func)
-        t2 = time()
-        print('\t' + option['description'] + f' :{(t2-t1):.4f}s')
-        # time.sleep(10)
+    # for option in niftimasker_options.values():
+    option = niftimasker_options['gm_3mm']
+    preprocessor = NiftiMasker(mask_img=option['mask_img'],
+                                memory_level=0, verbose=0)
+    t1 = time()
+    data = preprocessor.fit_transform(func)
+    t2 = time()
+    print('\t' + option['description'] + f' :{(t2-t1):.4f}s')
+    print('\t' + option['description'] + f' start time:{(t1 - t0):.4f}s')
+    print('\t' + option['description'] + f' end time:{(t2 - t0):.4f}s')
+
+    # time.sleep(10)
 
     # Extract atlas: difumo
-    masker = NiftiMapsMasker(
-        atlas_difumo.maps,
-        mask_img=epi_mask,
-        memory_level=0).fit()
+    # masker = NiftiMapsMasker(
+    #     atlas_difumo.maps,
+    #     mask_img=epi_mask,
+    #     memory_level=0).fit()
 
-    t1 = time()
-    timeseries = masker.transform(func)
-    t2 = time()
-    print(f'\tNiftiMapsMasker transform data with resample:{(t2-t1):.4f}s')
+    # t1 = time()
+    # timeseries = masker.transform(func)
+    # t2 = time()
+    # print(f'\tNiftiMapsMasker transform data with resample:{(t2-t1):.4f}s')
 
-    # Extract atlas: difumo
-    t1 = time()
-    atlas_difumo_resampled = resample_img(
-        atlas_difumo.maps,
-        target_affine=epi_mask.affine,
-        target_shape=epi_mask.shape)
-    t2 = time()
-    print(f'\tResample probseg before masker:{(t2-t1):.4f}s')
-    masker = NiftiMapsMasker(
-        atlas_difumo_resampled,
-        mask_img=epi_mask,
-        memory_level=0).fit()
+    # # Extract atlas: difumo
+    # t1 = time()
+    # atlas_difumo_resampled = resample_img(
+    #     atlas_difumo.maps,
+    #     target_affine=epi_mask.affine,
+    #     target_shape=epi_mask.shape)
+    # t2 = time()
+    # print(f'\tResample probseg before masker:{(t2-t1):.4f}s')
+    # masker = NiftiMapsMasker(
+    #     atlas_difumo_resampled,
+    #     mask_img=epi_mask,
+    #     memory_level=0).fit()
 
-    t1 = time()
-    timeseries = masker.transform(func)
-    t2 = time()
-    print(f'\tNiftiMapsMasker transform data no resample in masker object:{(t2-t1):.4f}s')
+    # t1 = time()
+    # timeseries = masker.transform(func)
+    # t2 = time()
+    # print(f'\tNiftiMapsMasker transform data no resample in masker object:{(t2-t1):.4f}s')
 
-    # Extract atlas: schaefer 800 2 mm
-    masker = NiftiLabelsMasker(
-        atlas_schaefer_800_2mm.maps,
-        mask_img=epi_mask,
-        memory_level=0).fit()
+    # # Extract atlas: schaefer 800 2 mm
+    # masker = NiftiLabelsMasker(
+    #     atlas_schaefer_800_2mm.maps,
+    #     mask_img=epi_mask,
+    #     memory_level=0).fit()
 
-    t1 = time()
-    timeseries = masker.transform(func)
-    t2 = time()
-    print(f'\tNiftiLabelsMasker transform data with resampling low res:{(t2-t1):.4f}s')
+    # t1 = time()
+    # timeseries = masker.transform(func)
+    # t2 = time()
+    # print(f'\tNiftiLabelsMasker transform data with resampling low res:{(t2-t1):.4f}s')
 
-    # Extract atlas: schaefer 800 1 mm
-    masker = NiftiLabelsMasker(
-        atlas_schaefer_800_1mm.maps,
-        mask_img=epi_mask,
-        memory_level=0).fit()
+    # # Extract atlas: schaefer 800 1 mm
+    # masker = NiftiLabelsMasker(
+    #     atlas_schaefer_800_1mm.maps,
+    #     mask_img=epi_mask,
+    #     memory_level=0).fit()
 
-    t1 = time()
-    timeseries = masker.transform(func)
-    t2 = time()
-    print(f'\tNiftiLabelsMasker transform data with resampling high res:{(t2-t1):.4f}s')
+    # t1 = time()
+    # timeseries = masker.transform(func)
+    # t2 = time()
+    # print(f'\tNiftiLabelsMasker transform data with resampling high res:{(t2-t1):.4f}s')
 
-    # Extract atlas: schaefer 800 user resampled
-    atlas_schaefer_800_3mm_resampled = resample_img(
-        atlas_schaefer_800_2mm.maps,
-        target_affine=epi_mask.affine,
-        target_shape=epi_mask.shape,
-        interpolation="nearest")
+    # # Extract atlas: schaefer 800 user resampled
+    # atlas_schaefer_800_3mm_resampled = resample_img(
+    #     atlas_schaefer_800_2mm.maps,
+    #     target_affine=epi_mask.affine,
+    #     target_shape=epi_mask.shape,
+    #     interpolation="nearest")
 
-    masker = NiftiLabelsMasker(
-        atlas_schaefer_800_3mm_resampled,
-        mask_img=epi_mask,
-        memory_level=0).fit()
+    # masker = NiftiLabelsMasker(
+    #     atlas_schaefer_800_3mm_resampled,
+    #     mask_img=epi_mask,
+    #     memory_level=0).fit()
 
-    t1 = time()
-    timeseries = masker.transform(func)
-    t2 = time()
-    print(f'\tNiftiLabelsMasker transform data no resample in masker object:{(t2-t1):.4f}s')
+    # t1 = time()
+    # timeseries = masker.transform(func)
+    # t2 = time()
+    # print(f'\tNiftiLabelsMasker transform data no resample in masker object:{(t2-t1):.4f}s')
 
 
 if __name__ == '__main__':
