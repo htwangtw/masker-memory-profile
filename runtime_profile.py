@@ -12,11 +12,12 @@ from nilearn.datasets import (fetch_atlas_difumo, fetch_atlas_schaefer_2018,
 from nilearn.image import load_img, mean_img, binarize_img, resample_img
 
 from time import time
+from memory_profiler import profile
 
-
-if __name__ == '__main__':
-    results = Path(__file__).parents[1] / 'results'
-    data_dir = Path(__file__).parents[1] / 'data'
+@profile
+def runtime_profile():
+    results = Path(__file__).parent / 'results'
+    data_dir = Path(__file__).parent / 'data'
     dataset = fetch_adhd(1, data_dir=data_dir)
     func = load_img(dataset.func[0])
 
@@ -72,7 +73,6 @@ if __name__ == '__main__':
     for option in niftimasker_options.values():
         t1 = time()
         preprocessor = NiftiMasker(mask_img=option['mask_img'],
-                                   memory=str(Path(__file__).parents[1] / 'nilearn_cache'),
                                    memory_level=1, verbose=0)
         data = preprocessor.fit_transform(func)
         t2 = time()
@@ -142,6 +142,9 @@ if __name__ == '__main__':
     t2 = time()
     print(f'\tNiftiLabelsMasker transform data no resample in masker object:{(t2-t1):.4f}s')
 
+
+if __name__ == '__main__':
+    runtime_profile()
 	# Precompute EPI mask precomputed :0.8314s
 	# Masker compute EPI mask :1.4853s
 	# GM mask 3mm :0.7599s
