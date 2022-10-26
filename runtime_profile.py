@@ -73,7 +73,7 @@ def runtime_profile():
     for option in niftimasker_options.values():
         t1 = time()
         preprocessor = NiftiMasker(mask_img=option['mask_img'],
-                                   memory_level=1, verbose=0)
+                                   memory_level=0, verbose=0)
         data = preprocessor.fit_transform(func)
         t2 = time()
         print('\t' + option['description'] + f' :{(t2-t1):.4f}s')
@@ -82,7 +82,8 @@ def runtime_profile():
     # Extract atlas: difumo
     masker = NiftiMapsMasker(
         atlas_difumo.maps,
-        mask_img=epi_mask).fit()
+        mask_img=epi_mask,
+        memory_level=0).fit()
 
     t1 = time()
     timeseries = masker.transform(func)
@@ -99,7 +100,8 @@ def runtime_profile():
     print(f'\tResample probseg before masker:{(t2-t1):.4f}s')
     masker = NiftiMapsMasker(
         atlas_difumo_resampled,
-        mask_img=epi_mask).fit()
+        mask_img=epi_mask,
+        memory_level=0).fit()
 
     t1 = time()
     timeseries = masker.transform(func)
@@ -109,7 +111,8 @@ def runtime_profile():
     # Extract atlas: schaefer 800 2 mm
     masker = NiftiLabelsMasker(
         atlas_schaefer_800_2mm.maps,
-        mask_img=epi_mask).fit()
+        mask_img=epi_mask,
+        memory_level=0).fit()
 
     t1 = time()
     timeseries = masker.transform(func)
@@ -119,7 +122,8 @@ def runtime_profile():
     # Extract atlas: schaefer 800 1 mm
     masker = NiftiLabelsMasker(
         atlas_schaefer_800_1mm.maps,
-        mask_img=epi_mask).fit()
+        mask_img=epi_mask,
+        memory_level=0).fit()
 
     t1 = time()
     timeseries = masker.transform(func)
@@ -135,7 +139,8 @@ def runtime_profile():
 
     masker = NiftiLabelsMasker(
         atlas_schaefer_800_3mm_resampled,
-        mask_img=epi_mask).fit()
+        mask_img=epi_mask,
+        memory_level=0).fit()
 
     t1 = time()
     timeseries = masker.transform(func)
